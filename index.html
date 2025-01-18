@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Movie Recommender</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+</head>
+<body>
+    <h1>Find Recommendations</h1>
+    
+    <!-- Form to input the favorite genre -->
+    <form action="/recommend_by_genre" method="post" id="genreForm">
+        <label for="genre">Favorite Genre:</label>
+        <input type="text" id="genre" name="genre" required>
+        <button type="submit">Get Recommendations</button>
+    </form>
+    
+    <!-- Container to display recommendations -->
+    <div id="results"></div>
+
+    <script>
+        // JavaScript to handle form submission and display recommendations
+        document.getElementById('genreForm').onsubmit = async (e) => {
+            e.preventDefault();  // Prevent page reload on form submit
+            
+            const genre = document.getElementById('genre').value;
+            
+            // Send a POST request to the Flask server
+            const response = await fetch('/recommend_by_genre', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                body: `genre=${genre}`
+            });
+
+            // Check if the response is okay
+            if (response.ok) {
+                try {
+                    const data = await response.json();  // Parse the JSON response
+                    
+                    const resultsDiv = document.getElementById('results');
+                    resultsDiv.innerHTML = `
+                        <h2>Recommendations</h2>
+                        <h3>Movies</h3>
+                        <ul>${data.movies.map(m => `<li>${m}</li>`).join('')}</ul>
+                        <h3>Series</h3>
+                        <ul>${data.series.map(s => `<li>${s}</li>`).join('')}</ul>
+                    `;
+                } catch (error) {
+                    console.error('Error parsing JSON:', error);
+                    const resultsDiv = document.getElementById('results');
+                    resultsDiv.innerHTML = '<p>Sorry, something went wrong while processing the recommendations.</p>';
+                }
+            } else {
+                console.error('Error fetching recommendations');
+                const resultsDiv = document.getElementById('results');
+                resultsDiv.innerHTML = '<p>Sorry, there was an issue with the server. Please try again later.</p>';
+            }
+        };
+    </script>
+
+    <script src="{{ url_for('static', filename='java.js') }}"></script> <!-- Ensure this file exists in static folder -->
+</body>
+</html>
